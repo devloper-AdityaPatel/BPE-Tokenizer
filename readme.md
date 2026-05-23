@@ -964,12 +964,12 @@ The implementation intentionally focuses on low-level engineering concerns rathe
 
 The current implementation includes:
 
-- intrusive token node structures fileciteturn0file0L9-L38
-- pool-based allocator infrastructure fileciteturn0file1L10-L43
-- binary serialization/deserialization systems fileciteturn0file3L8-L165
-- disk-backed runtime artifact persistence fileciteturn0file2L8-L42
-- incremental merge execution engine fileciteturn0file5L292-L562
-- radix-tree based vocabulary insertion and lookup fileciteturn0file5L75-L291
+- intrusive token node structures 
+- pool-based allocator infrastructure 
+- binary serialization/deserialization systems 
+- disk-backed runtime artifact persistence 
+- incremental merge execution engine 
+- radix-tree based vocabulary insertion and lookup 
 
 ---
 

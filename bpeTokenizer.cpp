@@ -89,48 +89,26 @@ private:
         return newNode;
     }
 
-    void RadixInsert(
-        uint_32 CurrentNodeIndex,
-        string &suffix,
-        uint_32 &suffixIndex,
-        uint_32 tokenId,
-        MemoryPool<TokenTreeNode> &tokenRadixTreePool)
+    void RadixInsert(uint_32 CurrentNodeIndex,string &suffix,uint_32 &suffixIndex,uint_32 tokenId,MemoryPool<TokenTreeNode> &tokenRadixTreePool)
     {
 
-        TokenTreeNode &CurrentNode =
-            tokenRadixTreePool.get(CurrentNodeIndex);
+        TokenTreeNode &CurrentNode = tokenRadixTreePool.get(CurrentNodeIndex);
 
         int i = 0;
 
-        //-------------------------------------------------------
-        // Match current node string
-        //-------------------------------------------------------
 
-        for (
-            i = 0;
-            i < CurrentNode.NodeString.length() &&
-            suffixIndex < suffix.length();
-            i++, suffixIndex++)
+        for (i = 0; i < CurrentNode.NodeString.length() && suffixIndex < suffix.length();i++, suffixIndex++)
         {
 
-            if (
-                CurrentNode.NodeString[i] !=
-                suffix[suffixIndex])
+            if (CurrentNode.NodeString[i] != suffix[suffixIndex])
             {
                 break;
             }
         }
 
-        //-------------------------------------------------------
-        // FULL NODE MATCH
-        //-------------------------------------------------------
 
         if (i == CurrentNode.NodeString.length())
         {
-
-            //---------------------------------------------------
-            // Entire suffix consumed
-            //---------------------------------------------------
 
             if (suffixIndex == suffix.length())
             {
@@ -142,28 +120,15 @@ private:
                 return;
             }
 
-            //---------------------------------------------------
-            // Need to go deeper
-            //---------------------------------------------------
-
-            unsigned char nextChar =
-                (unsigned char)suffix[suffixIndex];
-
-            //---------------------------------------------------
-            // Child does not exist
-            //---------------------------------------------------
-
+            unsigned char nextChar = (unsigned char)suffix[suffixIndex];
             if (CurrentNode.ChildIdx[nextChar] == NULL_IDX)
             {
 
-                uint_32 NewNodeIndex =
-                    tokenRadixTreePool.allocate(MakeTokenTreeNode());
+                uint_32 NewNodeIndex = tokenRadixTreePool.allocate(MakeTokenTreeNode());
 
-                TokenTreeNode &NewNode =
-                    tokenRadixTreePool.get(NewNodeIndex);
+                TokenTreeNode &NewNode = tokenRadixTreePool.get(NewNodeIndex);
 
-                NewNode.NodeString =
-                    suffix.substr(suffixIndex);
+                NewNode.NodeString = suffix.substr(suffixIndex);
 
                 NewNode.IsEndOfWord = true;
                 NewNode.TokenID = tokenId;
@@ -172,80 +137,39 @@ private:
 
                 return;
             }
-
-            //---------------------------------------------------
-            // Recursive insert
-            //---------------------------------------------------
-
-            RadixInsert(
-                CurrentNode.ChildIdx[nextChar],
-                suffix,
-                suffixIndex,
-                tokenId,
-                tokenRadixTreePool);
+            RadixInsert(CurrentNode.ChildIdx[nextChar],suffix,suffixIndex,tokenId,tokenRadixTreePool);
 
             return;
         }
 
-        //-------------------------------------------------------
-        // PARTIAL MATCH -> SPLIT NODE
-        //-------------------------------------------------------
+        uint_32 SplitNodeIndex = tokenRadixTreePool.allocate(MakeTokenTreeNode());
 
-        uint_32 SplitNodeIndex =
-            tokenRadixTreePool.allocate(MakeTokenTreeNode());
-
-        TokenTreeNode &SplitNode =
-            tokenRadixTreePool.get(SplitNodeIndex);
-
-        //-------------------------------------------------------
-        // Move old children
-        //-------------------------------------------------------
+        TokenTreeNode &SplitNode = tokenRadixTreePool.get(SplitNodeIndex);
 
         for (int j = 0; j < 256; j++)
         {
 
-            SplitNode.ChildIdx[j] =
-                CurrentNode.ChildIdx[j];
+            SplitNode.ChildIdx[j] = CurrentNode.ChildIdx[j];
 
-            CurrentNode.ChildIdx[j] =
-                NULL_IDX;
+            CurrentNode.ChildIdx[j] = NULL_IDX;
         }
 
-        //-------------------------------------------------------
-        // Old suffix becomes split node
-        //-------------------------------------------------------
 
-        SplitNode.NodeString =
-            CurrentNode.NodeString.substr(i);
+        SplitNode.NodeString = CurrentNode.NodeString.substr(i);
 
-        SplitNode.IsEndOfWord =
-            CurrentNode.IsEndOfWord;
+        SplitNode.IsEndOfWord = CurrentNode.IsEndOfWord;
 
-        SplitNode.TokenID =
-            CurrentNode.TokenID;
+        SplitNode.TokenID = CurrentNode.TokenID;
         TokenIdToRadixIndexMap[SplitNode.TokenID] = SplitNodeIndex;
-        //-------------------------------------------------------
-        // Shrink current node
-        //-------------------------------------------------------
 
-        CurrentNode.NodeString =
-            CurrentNode.NodeString.substr(0, i);
+        CurrentNode.NodeString = CurrentNode.NodeString.substr(0, i);
 
         CurrentNode.IsEndOfWord = false;
-
-        //-------------------------------------------------------
-        // Attach split node
-        //-------------------------------------------------------
 
         unsigned char oldChar =
             (unsigned char)SplitNode.NodeString[0];
 
-        CurrentNode.ChildIdx[oldChar] =
-            SplitNodeIndex;
-
-        //-------------------------------------------------------
-        // Incoming string fully consumed
-        //-------------------------------------------------------
+        CurrentNode.ChildIdx[oldChar] = SplitNodeIndex;
 
         if (suffixIndex == suffix.length())
         {
@@ -256,27 +180,18 @@ private:
             return;
         }
 
-        //-------------------------------------------------------
-        // Create new branch
-        //-------------------------------------------------------
+        uint_32 NewNodeIndex = tokenRadixTreePool.allocate(MakeTokenTreeNode());
 
-        uint_32 NewNodeIndex =
-            tokenRadixTreePool.allocate(MakeTokenTreeNode());
+        TokenTreeNode &NewNode = tokenRadixTreePool.get(NewNodeIndex);
 
-        TokenTreeNode &NewNode =
-            tokenRadixTreePool.get(NewNodeIndex);
-
-        NewNode.NodeString =
-            suffix.substr(suffixIndex);
+        NewNode.NodeString = suffix.substr(suffixIndex);
 
         NewNode.IsEndOfWord = true;
         NewNode.TokenID = tokenId;
         TokenIdToRadixIndexMap[tokenId] = NewNodeIndex;
-        unsigned char newChar =
-            (unsigned char)suffix[suffixIndex];
+        unsigned char newChar = (unsigned char)suffix[suffixIndex];
 
-        CurrentNode.ChildIdx[newChar] =
-            NewNodeIndex;
+        CurrentNode.ChildIdx[newChar] = NewNodeIndex;
     }
     void InsertIntoTokenTree(uint_32 parentNodeIndex, string &suffix, uint_32 tokenId, MemoryPool<TokenTreeNode> &tokenRadixTreePool)
     {
